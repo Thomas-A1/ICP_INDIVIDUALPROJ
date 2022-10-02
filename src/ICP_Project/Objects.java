@@ -139,16 +139,23 @@ public class Objects {
      * @return Routes object
      */
     public static Routes RouteObject(String[] Routelist) {
+        int Stops = 0;
+        try{
+            Stops = Integer.parseInt(Routelist[7]);
 
+        }catch (NumberFormatException nfe){
+            nfe.getMessage();
+        }
         String Airline_code = Routelist[0];
         String SourceAirportCode = Routelist[2];
         String DestinationAirportCode = Routelist[4];
-        return new Routes(Airline_code, SourceAirportCode, DestinationAirportCode);
+
+        return new Routes(Airline_code, SourceAirportCode, DestinationAirportCode, Stops);
     }
 
     /**
      * Handling the extreme cases by reading the Airports file and returning the records that have their length greater than 14
-     * (i.e., have an extra comma in particular record / tuple)
+     * (i.e., have an extra comma in a particular record / tuple)
      */
     public static void Extracommas() {
         BufferedReader reader = null;
@@ -162,7 +169,7 @@ public class Objects {
                 fieldobjects = content.split(",");
                 if (fieldobjects.length > 14) {
                     counter += 1;
-                    System.out.print(("The index of an identified extra comma " + counter + " is: "));
+                    System.out.print(("The index of an identified extra comma " + counter + " is: ")); // Printing out the records having the extra commas
                     System.out.println(fieldobjects[0]);
                     System.out.println(content);
                     System.out.println();
@@ -188,13 +195,13 @@ public class Objects {
      * @param Country: The country to be moved from
      * @return AirportID
      */
-    public static ArrayList<Integer> getAirportID(String City, String Country){
-        ArrayList<Integer> AirportID = new ArrayList<>();
+    public static String getAirportID(String City, String Country){
+        String AirportCode = "";
         for (Airport obj: Main.Airport_objects){
             if (obj.getCity().equals(City) && obj.getCountry().equals(Country)){
-                AirportID.add(obj.getAirport_id());
+                AirportCode = obj.getIATA_Code();
             }
-        }return AirportID;
+        }return AirportCode;
     }
     /**
      * Method to return an Airport object by comparing to a particular Airport code

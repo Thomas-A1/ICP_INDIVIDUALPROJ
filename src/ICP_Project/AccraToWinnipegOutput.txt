@@ -1,0 +1,9 @@
+*****THIS IS THE SOLUTION****
+
+1. AT from ACC to CMN 0 Stops
+2. AT from CMN to YUL 0 Stops
+3. AC from YUL to YWG 0 Stops
+
+Total Distance: 10673.723393181162KM
+Total number of flights: 3
+The Optimality Criteria is the Distance

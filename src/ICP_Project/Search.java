@@ -30,7 +30,7 @@ public class Search{
     /**
      * A Goal test method that checks if a particular location reached
      * while searching through the Hashmap is the expected destination
-     * @param location
+     * @param location: A specific location reached
      */
 
     public static boolean goal_test(String location) {
@@ -81,25 +81,33 @@ public class Search{
          * @param Sourcecode: The Airport source code to be passed
          * @return Actions arraylist
          */
-
         public static ArrayList<ArrayList<String>> actions(String Sourcecode){
             HashMap<String, ArrayList<ArrayList<String>>> key_neighbours = Routes.Routemap;
-            //ArrayList for the transition cost
-            ArrayList<String> transion_cost = new ArrayList<>();
-            //ArrayList for the Successor states
-            ArrayList<String> successor_states = new ArrayList<>();
-            //ArrayList for the sequence that would be returned
-            ArrayList<ArrayList<String>> sequence = new ArrayList<>();
+            ArrayList<String> transition_costs = new ArrayList<>(); //ArrayList for the transition cost
+            ArrayList<String> successor_states = new ArrayList<>(); //ArrayList for the Successor states
+            ArrayList<String> Stops = new ArrayList<>(); // ArrayList for the Stops
+            ArrayList<String> Airline_codes = new ArrayList<>(); // ArrayList fo Airline codes
+            ArrayList<ArrayList<String>> sequence = new ArrayList<>(); //ArrayList for the sequence that would be returned
             if (key_neighbours.containsKey(Sourcecode)){
-                //System.out.println("Checked: "+Sourcecode);
                 ArrayList<ArrayList<String>> values =  key_neighbours.get(Sourcecode);
-                //Looping through the values ArrayList and adding the transition cost at index 0 and successor state at index 1 to the sequence ArrayList to be returned
-                for (ArrayList<String> neigbour : values){
-                    transion_cost.add(neigbour.get(0));
-                    successor_states.add(neigbour.get(1));
+                for (ArrayList<String> neighbour : values){ //Looping through the values ArrayList and adding the transition cost at index 0 and successor state at index 1 to the sequence ArrayList to be returned
+                    /**
+                     * Description: Checking for edge cases where it is necessary to catch an IndexOutOfBoundsException
+                     */
+                    try{
+                        transition_costs.add(neighbour.get(0));
+                        successor_states.add(neighbour.get(1));
+                        Stops.add(neighbour.get(2));
+                        Airline_codes.add(neighbour.get(3));
+                    }
+                    catch(IndexOutOfBoundsException ob){
+                        System.out.println(ob.getMessage());
+                    }
                 }
-                sequence.add(transion_cost);
+                sequence.add(transition_costs);
                 sequence.add(successor_states);
+                sequence.add(Stops);
+                sequence.add(Airline_codes);
                 return sequence;
             }
             return sequence;
@@ -110,11 +118,12 @@ public class Search{
      * Node class which implements the Comparable interface to have access to the compareTo method
      * for comparing two objects if they're the same
      */
-
     public static class Node implements Comparable<Search.Node> {
-        private final String Airportcode;
+        private String Airportcode;
         private Node parent;
         private double path_cost;
+        private String Stops;
+        private String Airline_code;
 
         /**
          * Constructor for the Node class
@@ -122,19 +131,26 @@ public class Search{
          * @param parent: The parent node
          * @param path_cost: The cost in moving from one city to another
          */
-        public Node(String airportcode, Node parent, double path_cost) {
+        public Node(String airportcode, Node parent, double path_cost, String Stops, String airline_code) {
             this.Airportcode = airportcode;
             this.parent = parent;
             this.path_cost = path_cost;
+            this.Stops = Stops;
+            this.Airline_code = airline_code;
         }
 
         /**
-         * Overloading Constructor
-         * @param airportcode
+         * Overloading Constructor and seeting the values of the other parameter to null depending on the datatype
+         * @param airportcode: The unique code that identifies an airport
          */
         public Node(String airportcode){
-            this.Airportcode = airportcode;
+            this(airportcode, null, 0.0, "0", " ");
         }
+
+
+        /**
+         * Description: The solution path for finding the destination
+         */
         public void solution_path() {
             ArrayList<Node> result = new ArrayList<>();
             Node final_node = this;
@@ -147,20 +163,24 @@ public class Search{
 
         /**
          * Description: Method that writes output into a file
-         * @param result: The answer
+         * @param result: The output from one source or root to an expected destination
          */
         public void write_to_file(ArrayList<Node> result) {
             try {
-                PrintWriter out = new PrintWriter("output.txt");
-                String res = null;
+                PrintWriter out = new PrintWriter("Output.txt");
+                String writer = null;
                 int i = 0;
+                out.write("*****THIS IS THE SOLUTION****\n");
+                out.write("\n");
                 for (i = 1; i < result.size(); i++) {
-                    res = (i) + ". from " + result.get(i).parent + " to " + result.get(i).Airportcode;
-                    out.write(res + "\n");
-                    System.out.println(res);
+                    writer = (i) + ". " + result.get(i).Airline_code +" from "  + result.get(i).parent +
+                            " to " + result.get(i).Airportcode + " " + result.get(i).Stops + " Stops";
+                    out.write(writer + "\n");
+                    System.out.println(writer);
                 }
-                out.write("Total Distance: " + result.get(result.size() - 1).path_cost + "KM\n");
-                out.write("Total number of flights: " + i);
+                out.write("\nTotal Distance: " + result.get(result.size() - 1).path_cost + "KM\n");
+                out.write("Total number of flights: " + (i-1));
+                out.write("\nThe Optimality Criteria is the Distance");
                 out.close();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -186,7 +206,7 @@ public class Search{
 
         @Override
         public int hashCode() {
-            return Objects.hash(Airportcode); // Overiding the hashcode function to provide same hash value for a specific key and avoiding duplicate keys
+            return Objects.hash(Airportcode); // Overiding the hashcode method to provide unique hash value for a specific key to avoid duplicate keys
         }
     }
 
@@ -207,26 +227,53 @@ public class Search{
         System.out.println("Initially, explored set = " + explored);
         while (frontier.size() > 0){
             Node popped_node = frontier.remove();
-            System.out.println("Checking.....");
+            System.out.println("Checking......Currently at the Airport code: " + popped_node.Airportcode);
             if (OptimalDistance.goal_test(popped_node.Airportcode, Destinationcity)){
-                popped_node.solution_path();
                 System.out.println("Yay!! Found a Solution: "+ popped_node.Airportcode);
+                popped_node.solution_path();
                 return true;
             }
             explored.add(popped_node);
-            // System.out.println("Expanding: " + popped_node);
-            ArrayList<String> costs = OptimalDistance.actions(popped_node.Airportcode).get(0);
-            ArrayList<String> successor = OptimalDistance.actions(popped_node.Airportcode).get(1);
+            ArrayList<ArrayList<String>> actionRes = OptimalDistance.actions(popped_node.Airportcode);
+            ArrayList<String> costs = new ArrayList<>();
+            ArrayList<String> successor = new ArrayList<>();
+            ArrayList<String> stops = new ArrayList<>();
+            ArrayList<String> airline = new ArrayList<>();
+            /**
+             * Description: Checking for extreme cases where the destination to get to
+             * is null (i.e. '\N'). This way an IndexOutOfBoundsException will be thrown
+             * and needs to be catched.
+             */
+            try{
+                costs = actionRes.get(0);
+                successor = actionRes.get(1);
+                stops = actionRes.get(2);
+                airline = actionRes.get(3);
+            }
+            catch(NumberFormatException nfe){
+                System.out.println(nfe.getMessage());
+            }
+            catch(IndexOutOfBoundsException ob){
+                System.out.println(ob.getMessage());
+            }
+
             for (int i = 0; i < costs.size(); i++){
                 double old_pathcost = Double.parseDouble(costs.get(i))+popped_node.path_cost;
-                Node child = new Node(successor.get(i),popped_node, Double.parseDouble(costs.get(i))+popped_node.path_cost);
-                if (! (explored.contains(child) && frontier.contains(child))){
+                int stops_increment = Integer.parseInt(stops.get(i)) + Integer.parseInt(popped_node.Stops);
+                Node child = new Node(successor.get(i), popped_node, Double.parseDouble(costs.get(i)) + popped_node.path_cost, String.valueOf(stops_increment), airline.get(i));
+                /**
+                 * Description: If the child node is not in the frontier and explored set, then we add it to the frontier (i.e., to avoid redundancies)
+                 */
+                if (!(explored.contains(child) || frontier.contains(child))){
                     frontier.add(child);
                 }
                 else {
+                    /**
+                     * Description: Making the optimality criteria to be the shortest distance
+                     */
                     if (child.path_cost < old_pathcost){
-                        old_pathcost = child.path_cost;
                         child.parent = popped_node.parent;
+                        explored.remove(child);
                         frontier.add(child);
                     }
                 }

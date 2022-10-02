@@ -10,10 +10,10 @@ public class Routes {
     private final String Airline_code;
     private final String SourceAirportCode;
     private final String DestinationAirportCode;
+    private final int Stops;
 
     // A static Hashmap that will be populated with key (SourceAirportcode), value(DestinationAiportcode and pathcost) pairs, which would be accessed in Search class
     static HashMap<String, ArrayList<ArrayList<String>>> Routemap = new HashMap<>();
-
 
     /**
      * Constructor for the Routes class
@@ -21,10 +21,11 @@ public class Routes {
      * @param sourceAirportCode: The source airport code that identifies the starting point of the airport taken
      * @param destinationAirportCode: The destination Airport code that uniquely identifies the destination airport reached
      */
-    public Routes(String airline_code, String sourceAirportCode, String destinationAirportCode) {
+    public Routes(String airline_code, String sourceAirportCode, String destinationAirportCode, int Stops) {
         this.Airline_code = airline_code;
         this.SourceAirportCode = sourceAirportCode;
         this.DestinationAirportCode = destinationAirportCode;
+        this.Stops = Stops;
     }
 
     @Override
@@ -61,6 +62,13 @@ public class Routes {
     }
 
     /**
+     * Getter method to return the number of Stops to get to a destination
+     */
+    public int getStops(){
+        return Stops;
+    }
+
+    /**
      * A method that populates the Hashmap with the keys (SourceAirportCode) and its corresponding values (path costs and DestinationAirportcode)
      * @return Hashmap
      */
@@ -74,6 +82,8 @@ public class Routes {
             double cost = Haversine.RouteDistance(key, routeobjects.getDestinationAirportCode());
             routeCost.add(String.valueOf(cost));
             routeCost.add(routeobjects.getDestinationAirportCode());
+            routeCost.add(String.valueOf(routeobjects.getStops()));
+            routeCost.add(routeobjects.getAirline_code());
             // If the key is already in the hashmap, I add the values in an ArrayList of an ArrayList of strings to it (i.e. extending thr values)
             if (Routemap.containsKey(key)){
                 values = Routemap.get(key);

@@ -29,6 +29,7 @@ public class Readfile {
         }catch (IOException ie){
             ie.printStackTrace();
         }
+        // Handling the error catched
         finally{
             try{
                 if (reader != null)
